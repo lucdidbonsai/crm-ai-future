@@ -2093,6 +2093,18 @@
     .edp-ai-action-strip-link {
       color: #22AD01; font-weight: 500; cursor: pointer; text-decoration: underline;
     }
+    /* ── Email panel AI recommended actions section ── */
+    .edp-ai-actions-section {
+      padding: 18px 24px; border-top: 1px solid #d5edd0;
+      background: #f8fdf7; flex-shrink: 0;
+    }
+    .edp-ai-actions-header {
+      display: flex; align-items: center; gap: 8px; margin-bottom: 12px;
+    }
+    .edp-ai-actions-header .mdp-ai-spark-badge { /* inherited from meeting drawer */ }
+    .edp-ai-actions-label-email {
+      font-size: 12px; color: var(--text-muted); font-style: italic;
+    }
   </style>
 </head>
 <body>
@@ -3496,15 +3508,17 @@
 
       <!-- Internal comments (rendered inline below thread) -->
       <div id="edp-comments-display" class="edp-comments-display"></div>
-    </div>
 
-    <!-- AI action strip -->
-    <div class="edp-ai-action-strip" id="edp-ai-strip">
-      <span class="edp-ai-action-strip-badge">✦ AI</span>
-      <span>Detected 2 action items in this thread —</span>
-      <span class="edp-ai-action-strip-link" onclick="document.getElementById('edp-ai-strip').style.display='none'">Create tasks</span>
-      <span style="color:var(--text-lighter); margin:0 4px;">·</span>
-      <span class="edp-ai-action-strip-link" onclick="document.getElementById('edp-ai-strip').style.display='none'">Dismiss</span>
+      <!-- AI recommended actions (populated by JS) -->
+      <div class="edp-ai-actions-section" id="edp-ai-actions-section" style="display:none;">
+        <div class="edp-ai-actions-header">
+          <span class="mdp-ai-spark-badge">✦ AI</span>
+          <span class="edp-ai-actions-label-email">Suggested actions based on this email thread</span>
+        </div>
+        <div class="mdp-ai-action-cards" id="edp-ai-action-cards">
+          <!-- filled by JS -->
+        </div>
+      </div>
     </div>
 
     <!-- COMPOSE MODE: To + Subject fields + compose body -->
@@ -4222,35 +4236,152 @@ function toggleMdpChapter(headerEl) {
 const emailData = [
   {
     subject: 'Re: Rebrand proposal — next steps',
-    sender: 'Michael Fawler',
-    senderEmail: 'm.fawler@adobe.com',
-    to: 'you@bonsai.io',
-    date: 'Mar 4, 2026',
-    body: '<p>Hi,</p><p>Thanks for sending over the updated proposal. I\'ve reviewed it with Sarah and we\'re aligned on moving forward. Can we get the contract signed this week?</p><p>Also — I wanted to ask about the moodboard. Any chance we could see a first pass before our next call?</p><p>Best,<br>Michael</p>',
-    comments: []
+    threads: [
+      {
+        senderName: 'Lucas Didier',
+        senderAvatar: 'https://ui-avatars.com/api/?name=LD&size=250&background=22AD01&color=ffffff&format=png',
+        to: 'm.fawler@adobe.com',
+        date: 'Mar 3, 11:45 AM',
+        snip: 'Michael, as promised — attached is the updated proposal with the revised Phase 2 scope...',
+        body: '<p>Michael,</p><p>As promised — attached is the updated proposal with the revised Phase 2 scope and timeline. I\'ve incorporated the feedback from our call and adjusted the moodboard brief to focus on the Modern Minimalist direction you preferred.</p><p>Happy to walk through it on a call if helpful. Let me know your thoughts!</p><p>Best,<br>Lucas</p>'
+      },
+      {
+        senderName: 'Michael Fawler',
+        senderAvatar: 'https://ui-avatars.com/api/?name=MF&size=250&background=4c525a&color=ffffff&format=png',
+        to: 'you@bonsai.io',
+        date: 'Mar 4, 2:18 PM',
+        snip: 'Thanks for sending over the updated proposal. Sarah and I are aligned on moving forward...',
+        body: '<p>Hi Lucas,</p><p>Thanks for sending over the updated proposal. I\'ve reviewed it with Sarah and we\'re aligned on moving forward. Can we get the contract signed this week?</p><p>Also — I wanted to ask about the moodboard. Any chance we could see a first pass before our next call?</p><p>Best,<br>Michael</p>'
+      }
+    ],
+    comments: [
+      { author: 'You', avatar: 'https://ui-avatars.com/api/?name=LD&size=28&background=22AD01&color=fff', text: 'Need to send contract draft today and start moodboard — Michael is ready to move.', time: 'Mar 4, 3:00 PM' }
+    ],
+    aiActions: [
+      { type: 'contract', label: 'Create Contract', hint: 'Michael is ready to sign this week' },
+      { type: 'proposal', label: 'Create Moodboard Brief', hint: 'Share first pass before next call' },
+      { type: 'task', label: 'Add Task', hint: 'Follow up with contract by Friday' },
+    ]
   },
   {
     subject: 'Invoice #INV-0042 — Rebrand Discovery Phase',
-    sender: 'You',
-    senderEmail: 'you@bonsai.io',
-    to: 'm.fawler@adobe.com',
-    date: 'Feb 22, 2026',
-    body: '<p>Hi Michael,</p><p>Please find attached Invoice #INV-0042 for the Discovery Phase as discussed in our proposal review meeting.</p><p>Payment is due within 30 days. Let me know if you have any questions.</p><p>Best,<br>Lucas</p>',
-    comments: []
+    threads: [
+      {
+        senderName: 'Lucas Didier',
+        senderAvatar: 'https://ui-avatars.com/api/?name=LD&size=250&background=22AD01&color=ffffff&format=png',
+        to: 'm.fawler@adobe.com',
+        date: 'Feb 22, 10:05 AM',
+        snip: 'Hi Michael, please find attached Invoice #INV-0042 for the Discovery Phase...',
+        body: '<p>Hi Michael,</p><p>Please find attached Invoice #INV-0042 for the Discovery Phase as discussed in our proposal review meeting.</p><p>Amount due: $4,500. Payment is due within 30 days. Let me know if you have any questions.</p><p>Best,<br>Lucas</p>'
+      },
+      {
+        senderName: 'Michael Fawler',
+        senderAvatar: 'https://ui-avatars.com/api/?name=MF&size=250&background=4c525a&color=ffffff&format=png',
+        to: 'you@bonsai.io',
+        date: 'Feb 23, 9:30 AM',
+        snip: 'Got it, thanks Lucas. I\'ll get this processed through our AP team this week...',
+        body: '<p>Hi Lucas,</p><p>Got it, thanks. I\'ll get this processed through our AP team this week. One question — could you send a separate breakdown of the Phase 2 cost estimate? Our finance team needs it for budget approval before we proceed.</p><p>Michael</p>'
+      }
+    ],
+    comments: [],
+    aiActions: [
+      { type: 'invoice', label: 'Create Invoice', hint: 'Send Phase 2 cost breakdown to finance' },
+      { type: 'task', label: 'Add Task', hint: 'Follow up on INV-0042 payment status' },
+      { type: 'email', label: 'Send Follow-up', hint: 'Check in on AP processing' },
+    ]
   },
   {
     subject: 'Proposal: Adobe Creative Cloud Brand Refresh',
-    sender: 'You',
-    senderEmail: 'you@bonsai.io',
-    to: 'm.fawler@adobe.com',
-    date: 'Feb 10, 2026',
-    body: '<p>Hi Michael,</p><p>Great speaking with you last week! As promised, here is our proposal for the Adobe Creative Cloud brand refresh project.</p><p>Please review and let me know if you\'d like to schedule a call to walk through the details.</p><p>Best,<br>Lucas</p>',
-    comments: []
+    threads: [
+      {
+        senderName: 'Lucas Didier',
+        senderAvatar: 'https://ui-avatars.com/api/?name=LD&size=250&background=22AD01&color=ffffff&format=png',
+        to: 'm.fawler@adobe.com',
+        date: 'Feb 10, 3:15 PM',
+        snip: 'Great speaking with you last week! As promised, here is our proposal for the Adobe...',
+        body: '<p>Hi Michael,</p><p>Great speaking with you last week! As promised, here is our proposal for the Adobe Creative Cloud brand refresh project.</p><p>The proposal covers the full scope across both phases, with a detailed breakdown of deliverables and timeline. I\'d love to schedule a call to walk through it together.</p><p>Best,<br>Lucas</p>'
+      },
+      {
+        senderName: 'Michael Fawler',
+        senderAvatar: 'https://ui-avatars.com/api/?name=MF&size=250&background=4c525a&color=ffffff&format=png',
+        to: 'you@bonsai.io',
+        date: 'Feb 12, 11:22 AM',
+        snip: 'Lucas, this looks great. A few questions on Phase 2 before we loop in Sarah...',
+        body: '<p>Lucas,</p><p>This looks great — the scope aligns well with what we discussed. A few questions on Phase 2 before we loop in Sarah:</p><p>1. Is the 4-week Phase 2 timeline fixed or can it flex based on our feedback cycles?<br>2. The digital touchpoints scope — does that include the mobile app UI or just web?</p><p>Happy to jump on a quick call Thursday to go through these.</p><p>Michael</p>'
+      }
+    ],
+    comments: [],
+    aiActions: [
+      { type: 'proposal', label: 'Update Proposal', hint: 'Clarify Phase 2 timeline and digital scope' },
+      { type: 'schedule', label: 'Schedule Call', hint: 'Michael wants to sync Thursday' },
+      { type: 'task', label: 'Add Task', hint: 'Answer Michael\'s Phase 2 questions' },
+    ]
   }
 ];
 
 let emailPanelJustOpened = false;
 let currentEmailIdx = 0;
+
+const SVG_REPLY = '<svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path fill-rule="evenodd" clip-rule="evenodd" d="M5.27354 1.56964C5.89493 0.9124 7.00019 1.35217 7.00019 2.25665V4.06953C10.7192 4.59256 13.3352 8.00126 13.0304 12.3668C12.9847 13.0205 12.1535 13.0928 11.8977 12.5968C10.692 10.2587 8.89945 9.29527 7.00019 9.05998V10.7434C7.00019 11.6479 5.89493 12.0876 5.27354 11.4304L1.26163 7.18703C0.897164 6.80153 0.897163 6.1985 1.26163 5.813L5.27354 1.56964ZM6.00019 2.25665L1.98828 6.50002L6.00019 10.7434V8.51373C6.00019 8.37631 6.05675 8.24494 6.15659 8.1505C6.25643 8.05606 6.39074 8.00687 6.52795 8.0145C8.54734 8.12681 10.5433 8.91207 12.0195 10.9001C11.7101 7.55569 9.4003 5.23561 6.4631 5.01712C6.20207 4.9977 6.00019 4.78025 6.00019 4.5185V2.25665Z" fill="currentColor"/></svg>';
+const SVG_REPLY_ALL = '<svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M6.80541 1.8163C7.41084 1.21935 8.49974 1.62993 8.49974 2.53798V4.1708C10.069 4.54132 11.2669 5.50343 12.0398 6.86708C12.8204 8.24462 13.1598 10.0126 13.0583 11.9765L13.032 12.372C12.9836 12.9695 12.2519 13.0912 11.9499 12.6776L11.8962 12.5878C11.2926 11.366 10.7034 10.5437 10.073 9.99892C9.59921 9.58955 9.08794 9.32488 8.49974 9.17177V10.4628L8.4851 10.6376C8.3557 11.4205 7.37044 11.7411 6.80541 11.1835L6.69115 11.0507L3.80931 7.08876C3.55434 6.73819 3.55452 6.26261 3.80931 5.91201L6.69115 1.95009L6.80541 1.8163ZM3.59642 2.08095C3.75892 1.85803 4.07149 1.80834 4.29467 1.9706C4.5177 2.13292 4.56695 2.4456 4.40502 2.66884L1.61888 6.4999L4.40502 10.331L4.4558 10.4179C4.55233 10.6295 4.48984 10.8869 4.29467 11.0292C4.0992 11.1713 3.8355 11.151 3.66381 10.994L3.59642 10.9188L0.81029 7.08779C0.555452 6.73719 0.555396 6.26258 0.81029 5.91201L3.59642 2.08095ZM4.61791 6.4999V6.50087L7.49974 10.4628V8.56533C7.49974 8.42102 7.56198 8.28332 7.67064 8.18837C7.77937 8.09348 7.92413 8.04979 8.06713 8.06923C9.07542 8.20681 9.94483 8.5669 10.7263 9.24208C11.2091 9.65926 11.6483 10.189 12.0652 10.8417C12.008 9.47642 11.6981 8.29269 11.1697 7.36025C10.4695 6.12493 9.37934 5.3103 7.91967 5.07314C7.67781 5.0338 7.4999 4.82499 7.49974 4.57998V2.53798L4.61791 6.4999Z" fill="currentColor"/></svg>';
+const SVG_FORWARD = '<svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M8.4061 1.91318L8.76943 1.56967L12.7813 5.81304C13.1458 6.19853 13.1458 6.80156 12.7813 7.18706L8.76943 11.4304C8.14804 12.0877 7.04278 11.6479 7.04278 10.7434V8.51376C5.4791 8.62766 3.4622 9.41292 2.14522 12.5969C1.88945 13.0928 1.05823 13.0205 1.01257 12.3668C0.695235 7.8223 3.54318 4.31467 7.57987 5.01715V2.25668C7.04278 1.3522 8.14804 0.912432 8.4061 1.91318ZM8.04278 2.25668V4.51853C8.04278 4.78028 7.8409 4.99773 7.57987 5.01715C4.24911 5.26492 1.72511 8.2152 2.01014 12.2971C3.4622 10.0432 5.4791 9.1293 7.51502 8.01454C7.78654 8.05609 7.98622 8.24497 8.04278 8.51376V10.7434L12.0547 6.50005L8.04278 2.25668Z" fill="currentColor"/></svg>';
+
+function renderEmailThread(idx) {
+  const d = emailData[idx];
+  const threads = d.threads || [];
+  let html = '';
+  threads.forEach((msg, i) => {
+    const isLast = i === threads.length - 1;
+    const collapsed = !isLast;
+    html += `<div class="edp-thread-msg${collapsed ? ' collapsed' : ''}" onclick="toggleThreadMsg(this)">`;
+    html += `<div class="edp-thread-msg-header">`;
+    html += `<div class="user-avatar avatar-xs" style="background-image:url('${msg.senderAvatar}');flex-shrink:0;"></div>`;
+    html += `<div class="edp-thread-msg-meta">`;
+    html += `<div class="edp-thread-msg-sender">${msg.senderName}</div>`;
+    if (collapsed) {
+      html += `<div class="edp-thread-msg-snip">${msg.snip}</div>`;
+    } else {
+      html += `<div class="edp-thread-msg-to">to ${msg.to}</div>`;
+    }
+    html += `</div>`;
+    html += `<span class="edp-thread-msg-date">${msg.date}</span>`;
+    html += `<div class="edp-thread-msg-actions">`;
+    if (!collapsed) {
+      html += `<button class="edp-action-btn" data-tooltip="Reply" onclick="event.stopPropagation();switchComposeTab('reply')">${SVG_REPLY}</button>`;
+      html += `<button class="edp-action-btn" data-tooltip="Reply all" onclick="event.stopPropagation();switchComposeTab('reply')">${SVG_REPLY_ALL}</button>`;
+      html += `<button class="edp-action-btn" data-tooltip="Forward" onclick="event.stopPropagation();">${SVG_FORWARD}</button>`;
+    }
+    html += `</div></div>`;
+    html += `<div class="edp-thread-msg-body">${msg.body}</div>`;
+    html += `</div>`;
+  });
+  document.getElementById('edp-body').innerHTML = html;
+}
+
+function toggleThreadMsg(el) {
+  el.classList.toggle('collapsed');
+  // Update the to/snip line when expanding/collapsing
+  const idx = currentEmailIdx;
+  const d = emailData[idx];
+  const msgs = d.threads || [];
+  const allMsgs = el.parentElement.querySelectorAll('.edp-thread-msg');
+  allMsgs.forEach((msgEl, i) => {
+    const meta = msgEl.querySelector('.edp-thread-msg-meta');
+    if (!meta) return;
+    const msg = msgs[i];
+    if (!msg) return;
+    const isCollapsed = msgEl.classList.contains('collapsed');
+    const snipEl = meta.querySelector('.edp-thread-msg-snip');
+    const toEl = meta.querySelector('.edp-thread-msg-to');
+    if (snipEl) snipEl.style.display = isCollapsed ? '' : 'none';
+    if (toEl) toEl.style.display = isCollapsed ? 'none' : '';
+    const actionsEl = msgEl.querySelector('.edp-thread-msg-actions');
+    if (actionsEl) actionsEl.innerHTML = !isCollapsed ? `
+      <button class="edp-action-btn" data-tooltip="Reply" onclick="event.stopPropagation();switchComposeTab('reply')">${SVG_REPLY}</button>
+      <button class="edp-action-btn" data-tooltip="Reply all" onclick="event.stopPropagation();switchComposeTab('reply')">${SVG_REPLY_ALL}</button>
+      <button class="edp-action-btn" data-tooltip="Forward" onclick="event.stopPropagation();">${SVG_FORWARD}</button>` : '';
+  });
+}
 
 function openEmailPanel(idx) {
   currentEmailIdx = idx;
@@ -4260,9 +4391,33 @@ function openEmailPanel(idx) {
   const subjEl = document.getElementById('edp-subject');
   if (subjEl) subjEl.textContent = d.subject;
   panel.classList.remove('compose-mode');
+  // Render thread + comments
+  renderEmailThread(idx);
+  renderEmailComments(idx);
+  // Render AI actions
+  const aiSection = document.getElementById('edp-ai-actions-section');
+  const aiCards = document.getElementById('edp-ai-action-cards');
+  if (aiSection && aiCards) {
+    const actions = d.aiActions || [];
+    if (actions.length) {
+      aiCards.innerHTML = actions.map(a => `
+        <button class="mdp-ai-action-card" onclick="handleAiAction('${a.type}', this)" title="${a.hint}">
+          <div class="mdp-ai-action-icon">${AI_ACTION_ICONS[a.type] || AI_ACTION_ICONS.task}</div>
+          <div class="mdp-ai-action-info">
+            <span class="mdp-ai-action-title">${a.label}</span>
+            <span class="mdp-ai-action-hint">${a.hint}</span>
+          </div>
+          <svg class="mdp-ai-action-caret" width="7" height="12" viewBox="0 0 7 12" fill="none"><path d="M1.5 1.5L5.5 6l-4 4.5" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </button>`).join('');
+      aiSection.style.display = '';
+    } else {
+      aiSection.style.display = 'none';
+    }
+  }
+  // Reset compose tab
+  switchComposeTab('reply');
   panel.classList.add('open');
   emailPanelJustOpened = true;
-  renderEmailComments(idx);
 }
 
 function renderEmailComments(idx) {
@@ -4272,7 +4427,7 @@ function renderEmailComments(idx) {
   if (comments.length === 0) { el.innerHTML = ''; return; }
   el.innerHTML = comments.map(c => `
     <div class="edp-comment-item">
-      <img src="https://ui-avatars.com/api/?name=${encodeURIComponent(c.author)}&size=28&background=22AD01&color=fff" style="width:28px;height:28px;border-radius:50%;" />
+      <img src="${c.avatar || `https://ui-avatars.com/api/?name=${encodeURIComponent(c.author)}&size=28&background=22AD01&color=fff`}" style="width:28px;height:28px;border-radius:50%;flex-shrink:0;margin-top:2px;" />
       <div class="edp-comment-bubble">
         <div class="edp-comment-author">${c.author}</div>
         <div class="edp-comment-text">${c.text}</div>
